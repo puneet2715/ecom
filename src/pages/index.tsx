@@ -1,8 +1,6 @@
 import Head from 'next/head';
-import { Inter } from '@next/font/google';
 import styles from '@/styles/Home.module.css';
 import * as React from 'react';
-import EnhancedButton from '@/components/common/Button';
 import {
   DataGrid,
   GridColDef,
@@ -19,7 +17,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-const inter = Inter({ subsets: ['latin'] });
+import EnhancedForm from '@/components/common/Form';
 
 function CustomToolbar() {
   return (
@@ -65,7 +63,7 @@ export default function Home() {
       field: 'contact',
       headerName: 'Contact No.',
       type: 'number',
-      // width: 140,
+      minWidth: 140,
       valueFormatter: (params) => Number(params.value).toLocaleString('en'),
     },
     {
@@ -79,8 +77,8 @@ export default function Home() {
       headerName: 'Actions',
       // type: React.ReactNode,
       renderCell: () => actionButtons(),
-      // sortable: false,
-      width: 180,
+      sortable: false,
+      minWidth: 180,
       // filterable: false,
       // disableColumnMenu: true,
     },
@@ -162,13 +160,38 @@ export default function Home() {
   ];
 
   const fields = [
-    'Email Address',
-    'Contact Number',
-    'Location',
-    'Address',
-    'Gender',
-    'Image url',
+    {
+      key: 'email',
+      label: 'Email Address',
+    },
+    {
+      key: 'phone',
+      label: 'Contact Number',
+    },
+    {
+      key: 'location',
+      label: 'Location',
+    },
+    {
+      key: 'address',
+      label: 'Address',
+    },
+    {
+      key: 'gender',
+      label: 'Gender',
+    },
+    {
+      key: 'image',
+      label: 'Image',
+    },
   ];
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleSubmit = (data: Record<string, string>) => {
+    console.log(data);
+    setOpen(false);
+  };
 
   return (
     <>
@@ -196,8 +219,9 @@ export default function Home() {
                   <Typography>Sellers({rows.length})</Typography>
                 </Box>
                 <Box>
-                  {/* <Button variant="contained">Add Seller</Button> */}
-                  <EnhancedButton str="Seller" fields={fields} />
+                  <Button variant="contained" onClick={() => setOpen(true)}>
+                    Add Seller
+                  </Button>
                 </Box>
               </Stack>
             </Toolbar>
@@ -214,6 +238,13 @@ export default function Home() {
             />
           </Paper>
         </Box>
+        <EnhancedForm
+          title="Add Seller"
+          fields={fields}
+          onClose={() => setOpen(false)}
+          open={open}
+          onSubmit={handleSubmit}
+        />
       </main>
     </>
   );

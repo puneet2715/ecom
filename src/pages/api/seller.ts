@@ -1,6 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import mongoose from '@/utils/mongo';
-import { Seller } from '@/utils/SellerSchema';
 
 type Data = {
   name: string;

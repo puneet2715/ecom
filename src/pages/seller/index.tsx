@@ -1,7 +1,4 @@
-// import * as react from "react";
-import EnhancedButton from '@/components/common/Button';
 import styles from '@/styles/Home.module.css';
-// import { Box, Paper, Toolbar, Stack, Typography, Button } from '@mui/material';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Toolbar from '@mui/material/Toolbar';
@@ -16,8 +13,13 @@ import {
   GridToolbarFilterButton,
   GridValueGetterParams,
 } from '@mui/x-data-grid';
+// import DataGrid from '@mui/x-data-grid/DataGrid';
+// import GridToolbarColumnsButton from '@mui/x-data-grid/GridToolbarColumnsButton';
+// import GridToolbarContainer from '@mui/x-data-grid/GridToolbarContainer';
+// import GridToolbarFilterButton from '@mui/x-data-grid/';
 import Link from 'next/link';
 import React from 'react';
+import EnhancedForm from '@/components/common/Form';
 
 function CustomToolbar() {
   return (
@@ -162,13 +164,40 @@ export default function Seller() {
   ];
 
   const fields = [
-    'Product Name',
-    'SKU',
-    'Image',
-    'Cost Price',
-    'Selling Price',
-    'Stock',
-  ];
+    {
+      key: 'product',
+      label: 'Product Name',
+    },
+    {
+      key: 'sku',
+      label: 'SKU',
+    },
+    {
+      key: 'image',
+      label: 'Image',
+    },
+    {
+      key: 'costPrice',
+      label: 'Cost Price',
+    },
+    {
+      key: 'sellingPrice',
+      label: 'Selling Price',
+    },
+    {
+      key: 'stock',
+      label: 'Stock',
+    },
+  ] as const;
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleSubmit = (
+    data: Record<(typeof fields)[number]['key'], string>,
+  ) => {
+    setOpen(false);
+  };
+
   return (
     <>
       <main className={styles.main}>
@@ -186,30 +215,37 @@ export default function Seller() {
                 width="100%"
               >
                 <Box>
-                  <Typography>Sellers({rows.length})</Typography>
+                  <Typography>Listings({rows.length})</Typography>
                 </Box>
                 <Box>
-                  {/* <Button variant="contained">Add New Listings</Button> */}
-                  <EnhancedButton str="New Listings" fields={fields} />
+                  <Button variant="contained" onClick={() => setOpen(true)}>
+                    Add New Listings
+                  </Button>
                 </Box>
               </Stack>
             </Toolbar>
-            <Box sx={{ width: '100%', height: rows.length * 48 }}>
-              <DataGrid
-                // minColumnWidth={'100%'}
-                rows={rows}
-                columns={columns}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
-                // rowsPerPageOptions={[5, 10, 15]}
-                checkboxSelection
-                components={{
-                  Toolbar: CustomToolbar,
-                }}
-              />
-            </Box>
+            <DataGrid
+              // minColumnWidth={'100%'}
+              rows={rows}
+              columns={columns}
+              pageSize={5}
+              rowsPerPageOptions={[5]}
+              // rowsPerPageOptions={[5, 10, 15]}
+              checkboxSelection
+              components={{
+                Toolbar: CustomToolbar,
+              }}
+            />
+            {/* <Box sx={{ width: '100%', height: rows.length * 48 }}></Box> */}
           </Paper>
         </Box>
+        <EnhancedForm
+          title="Add New Listing"
+          fields={fields}
+          onClose={() => setOpen(false)}
+          open={open}
+          onSubmit={handleSubmit}
+        />
       </main>
     </>
   );
