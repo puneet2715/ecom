@@ -1,197 +1,164 @@
 import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
-import * as React from 'react';
-import {
-  DataGrid,
-  GridColDef,
-  GridValueGetterParams,
-  GridToolbarFilterButton,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
-} from '@mui/x-data-grid';
-import Link from 'next/link';
-// import { Box, Button, Paper, Stack, Toolbar, Typography } from '@mui/material';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import EnhancedForm from '@/components/common/Form';
+import { useState, MouseEvent } from 'react';
+import { GridColDef } from '@mui/x-data-grid';
+import dynamic from 'next/dynamic';
+import { serverClient, client } from '@/utils/axios';
+import { SellerData } from '@/types/seller.type';
+import EnhancedDataGrid from '@/components/common/EnhancedDataGrid';
+import SellerToolbar from '@/components/seller/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/EditOutlined';
+import DeleteIcon from '@mui/icons-material/DeleteOutlineOutlined';
 
-function CustomToolbar() {
-  return (
-    <GridToolbarContainer>
-      <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      {/* <GridToolbarDensitySelector />
-      <GridToolbarExport /> */}
-    </GridToolbarContainer>
-  );
-}
+const Box = dynamic(() => import('@mui/material/Box'));
+const Paper = dynamic(() => import('@mui/material/Paper'));
+const Stack = dynamic(() => import('@mui/material/Stack'));
+const EnhancedForm = dynamic(() => import('@/components/common/Form'));
 
-const actionButtons = () => {
+type ActionButtonsProps = {
+  onAction: (type: string) => void;
+};
+
+const ActionButtons = (props: ActionButtonsProps) => {
+  const onAction = (e: MouseEvent<HTMLButtonElement>, type: string) => {
+    e.stopPropagation();
+    props.onAction(type);
+  };
+
   return (
-    <>
-      <Stack direction="row" width={'100%'} justifyContent="space-between">
-        <Link href="/seller">
-          <Button variant="contained" size="small">
-            Update
-          </Button>
-        </Link>
-        <Link href="/seller">
-          <Button variant="contained" size="small">
-            Delete
-          </Button>
-        </Link>
-      </Stack>
-    </>
+    <Stack direction="row" spacing={2}>
+      <IconButton color="primary" onClick={(e) => onAction(e, 'update')}>
+        <EditIcon />
+      </IconButton>
+      <IconButton color="error" onClick={(e) => onAction(e, 'delete')}>
+        <DeleteIcon />
+      </IconButton>
+    </Stack>
   );
 };
 
-export default function Home() {
+const fields = [
+  {
+    key: 'name',
+    label: 'Name',
+  },
+  {
+    key: 'contactNumber',
+    label: 'Contact Number',
+  },
+  {
+    key: 'location',
+    label: 'Location',
+  },
+  {
+    key: 'address',
+    label: 'Address',
+  },
+  {
+    key: 'gender',
+    label: 'Gender',
+  },
+  {
+    key: 'image',
+    label: 'Image',
+  },
+];
+
+export default function Home({ sellers }: { sellers: SellerData[] }) {
+  const [rows, setRows] = useState(sellers);
+  const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState<
+    Record<string, string | number> | undefined
+  >(undefined);
+
+  const handleDelete = async (id: string) => {
+    await client.delete(`/seller`, {
+      data: { id },
+    });
+    const newRows = rows.filter((row) => row.id !== id);
+    setRows([...newRows]);
+  };
+
+  const handleUpdate = async (
+    id: string,
+    data: Record<string, string | number>,
+  ) => {
+    const response = await client.put<SellerData>('/seller', {
+      id,
+      ...data,
+    });
+    const index = rows.findIndex((row) => row.id === id);
+    const updatedRow = {
+      ...response.data,
+      totalListings: rows[index].totalListings,
+    };
+    const newRows = rows.map((row) => {
+      if (row.id === id) {
+        return updatedRow;
+      }
+      return row;
+    });
+    setRows([...newRows]);
+  };
+
+  const handleCreate = async (data: Record<string, string | number>) => {
+    const seller = await client.post<SellerData>('/seller', data);
+    setRows([...rows, { ...seller.data, totalListings: 0 }]);
+  };
+
+  const handleSubmit = async (
+    data: Record<string, string | number>,
+    id?: string,
+  ) => {
+    if (id) {
+      await handleUpdate(id, data);
+    } else {
+      await handleCreate(data);
+    }
+    setOpen(false);
+  };
+
+  const handleActionClick = (id: string, type: string) => {
+    if (type === 'delete') {
+      handleDelete(id);
+    } else {
+      const data = rows.find((row) => row.id === id);
+      setEditData(data);
+      setOpen(true);
+    }
+  };
+
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'id', headerName: 'ID', flex: 1, hide: true },
     {
-      field: 'Name',
+      field: 'name',
       headerName: 'Name',
-      // width: 130,
-      valueGetter: (params: GridValueGetterParams) =>
-        `${params.row.firstName || ''} ${params.row.lastName || ''}`,
+      flex: 1,
     },
     {
-      field: 'contact',
+      field: 'contactNumber',
       headerName: 'Contact No.',
-      type: 'number',
-      minWidth: 140,
-      valueFormatter: (params) => Number(params.value).toLocaleString('en'),
+      flex: 1,
     },
     {
-      field: 'listing',
+      field: 'totalListings',
       headerName: 'Total Listing',
       type: 'number',
-      // width: 140,
+      flex: 1,
     },
     {
       field: 'actions',
       headerName: 'Actions',
-      // type: React.ReactNode,
-      renderCell: () => actionButtons(),
+      flex: 1,
+      renderCell: (params) => (
+        <ActionButtons
+          onAction={(type) => handleActionClick(params.row.id, type)}
+        />
+      ),
       sortable: false,
-      minWidth: 180,
-      // filterable: false,
-      // disableColumnMenu: true,
-    },
-    // {
-    //   field: 'fullName',
-    //   headerName: 'Full name',
-    //   description: 'This column has a value getter and is not sortable.',
-    //   sortable: false,
-    //   width: 160,
-    //   valueGetter: (params: GridValueGetterParams) =>
-    //     `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-    // },
-  ];
-
-  const rows = [
-    {
-      id: 1,
-      lastName: 'Snow',
-      firstName: 'Jon',
-      contact: 123456789,
-      listing: 35,
-    },
-    {
-      id: 2,
-      lastName: 'Lannister',
-      firstName: 'Cersei',
-      contact: 123456789,
-      listing: 42,
-    },
-    {
-      id: 3,
-      lastName: 'Lannister',
-      firstName: 'Jaime',
-      contact: 123456789,
-      listing: 45,
-    },
-    {
-      id: 4,
-      lastName: 'Stark',
-      firstName: 'Arya',
-      contact: 123456789,
-      listing: 16,
-    },
-    {
-      id: 5,
-      lastName: 'Targaryen',
-      firstName: 'Daenerys',
-      contact: 123456789,
-      listing: 30,
-    },
-    {
-      id: 6,
-      lastName: 'Melisandre',
-      firstName: 'Paul',
-      contact: 123456789,
-      listing: 150,
-    },
-    {
-      id: 7,
-      lastName: 'Clifford',
-      firstName: 'Ferrara',
-      contact: 123456789,
-      listing: 44,
-    },
-    {
-      id: 8,
-      lastName: 'Frances',
-      firstName: 'Rossini',
-      contact: 123456789,
-      listing: 36,
-    },
-    {
-      id: 9,
-      lastName: 'Roxie',
-      firstName: 'Harvey',
-      contact: 123456789,
-      listing: 65,
     },
   ];
-
-  const fields = [
-    {
-      key: 'email',
-      label: 'Email Address',
-    },
-    {
-      key: 'phone',
-      label: 'Contact Number',
-    },
-    {
-      key: 'location',
-      label: 'Location',
-    },
-    {
-      key: 'address',
-      label: 'Address',
-    },
-    {
-      key: 'gender',
-      label: 'Gender',
-    },
-    {
-      key: 'image',
-      label: 'Image',
-    },
-  ];
-
-  const [open, setOpen] = React.useState(false);
-
-  const handleSubmit = (data: Record<string, string>) => {
-    console.log(data);
-    setOpen(false);
-  };
 
   return (
     <>
@@ -203,49 +170,36 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <Box sx={{ width: '100%' }}>
-          <Paper sx={{ width: '100%', mb: 2, height: rows.length * 48 }}>
-            <Toolbar
-              sx={{
-                pl: { sm: 2 },
-                pr: { xs: 1, sm: 1 },
-              }}
-            >
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                width="100%"
-              >
-                <Box>
-                  <Typography>Sellers({rows.length})</Typography>
-                </Box>
-                <Box>
-                  <Button variant="contained" onClick={() => setOpen(true)}>
-                    Add Seller
-                  </Button>
-                </Box>
-              </Stack>
-            </Toolbar>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              pageSize={5}
-              rowsPerPageOptions={[5]}
-              // rowsPerPageOptions={[5, 10, 15]}
-              checkboxSelection
-              components={{
-                Toolbar: CustomToolbar,
-              }}
-            />
+          <Paper sx={{ width: '100%', mb: 2 }}>
+            <SellerToolbar noOfRows={rows.length} setOpen={setOpen} />
+            <EnhancedDataGrid rows={rows} columns={columns} />
           </Paper>
         </Box>
         <EnhancedForm
-          title="Add Seller"
+          key={'seller-form' + (editData ? editData.id : '')}
+          title={editData ? 'Update Seller' : 'Add Seller'}
           fields={fields}
           onClose={() => setOpen(false)}
           open={open}
+          editData={editData}
           onSubmit={handleSubmit}
         />
       </main>
     </>
   );
 }
+
+export const getServerSideProps = async () => {
+  let sellers: SellerData[] = [];
+  try {
+    const response = await serverClient.get<SellerData[]>('/seller');
+    sellers = response.data;
+  } catch (error) {
+  } finally {
+    return {
+      props: {
+        sellers,
+      },
+    };
+  }
+};

@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 
-const uri = process.env.MONGO_URI || '';
+const connectMongo = async () => {
+  if (mongoose.connections[0].readyState) {
+    return;
+  }
+  console.log('Using new connection');
+  await mongoose.connect(process.env.MONGO_URI || '');
+};
 
-mongoose.connect(uri);
-
-export default mongoose;
+export default connectMongo;

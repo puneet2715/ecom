@@ -1,32 +1,69 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-type Data = {
-  name: string;
-  contactNumber: string;
-  location: string;
-  address: string;
-  gender: string;
-  image: string;
-};
+import Seller from '@/models/Seller';
+import connectMongo from '@/utils/mongo';
+import { SellerData } from '@/types/seller.type';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>,
+  res: NextApiResponse,
 ) {
-  if (req.method === 'POST') {
-    // Process a POST request
-    // console.log(req.body);
-    // await Seller.save({ ...req.body });
-    res.status(200).json({
-      name: 'John Doe',
-      contactNumber: '1234567890',
-      location: 'Bangalore',
-      address: 'Bangalore',
-      gender: 'Male',
-      image: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fw',
-    });
-  } else {
-    // Handle any other HTTP method
-    // res.status(200).json({ name: 'John Doe' });
+  await connectMongo();
+  switch (req.method) {
+    case 'GET':
+      const sellers = await Seller.aggregate<
+        SellerData & { totalListings: number }
+      >([
+        {
+          $lookup: {
+            from: 'listings',
+            localField: '_id',
+            foreignField: 'sellerId',
+            as: 'listings',
+          },
+        },
+        {
+          $addFields: {
+            totalListings: { $size: '$listings' },
+            id: '$_id',
+          },
+        },
+        {
+          $unset: ['listings'],
+        },
+      ]);
+      res.status(200).send(sellers);
+      break;
+    case 'POST':
+      const newSeller = await Seller.create(req.body);
+      res.status(200).send(newSeller);
+      break;
+    case 'PUT':
+      const updatedSeller = await Seller.findByIdAndUpdate(
+        req.body.id,
+        req.body,
+        {
+          new: true,
+          overwrite: true,
+        },
+      );
+      res.status(200).send(updatedSeller);
+      break;
+    case 'PATCH':
+      const modifiedSeller = await Seller.findByIdAndUpdate(
+        req.body.id,
+        req.body,
+        {
+          new: true,
+        },
+      );
+      res.status(200).send(modifiedSeller);
+      break;
+    case 'DELETE':
+      await Seller.findByIdAndDelete(req.body.id);
+      res.status(200).send({ message: 'Seller deleted' });
+      break;
+    default:
+      res.status(400).send({ message: 'Invalid request' });
+      break;
   }
 }
