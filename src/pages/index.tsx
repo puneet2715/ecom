@@ -1,16 +1,20 @@
 import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
-import { useState, MouseEvent } from 'react';
-import { GridColDef } from '@mui/x-data-grid';
 import dynamic from 'next/dynamic';
-import { serverClient, client } from '@/utils/axios';
+import type { GridColDef } from '@mui/x-data-grid';
+import { useState, MouseEvent } from 'react';
+import { client } from '@/utils/axios';
 import { SellerData } from '@/types/seller.type';
-import EnhancedDataGrid from '@/components/common/EnhancedDataGrid';
+import { useRouter } from 'next/router';
+import { getSellers } from '@/services/seller.service';
 import SellerToolbar from '@/components/seller/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineOutlined';
 
+const EnhancedDataGrid = dynamic(
+  () => import('@/components/common/EnhancedDataGrid'),
+);
 const Box = dynamic(() => import('@mui/material/Box'));
 const Paper = dynamic(() => import('@mui/material/Paper'));
 const Stack = dynamic(() => import('@mui/material/Stack'));
@@ -66,6 +70,8 @@ const fields = [
 ];
 
 export default function Home({ sellers }: { sellers: SellerData[] }) {
+  const router = useRouter();
+
   const [rows, setRows] = useState(sellers);
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<
@@ -84,7 +90,7 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
     id: string,
     data: Record<string, string | number>,
   ) => {
-    const response = await client.put<SellerData>('/seller', {
+    const response = await client.put<SellerData>(`/seller/${id}`, {
       id,
       ...data,
     });
@@ -124,13 +130,13 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
       handleDelete(id);
     } else {
       const data = rows.find((row) => row.id === id);
-      setEditData(data);
+      setEditData(data as Record<string, string | number> | undefined);
       setOpen(true);
     }
   };
 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 1, hide: true },
+    { field: 'id', headerName: 'ID', flex: 1 },
     {
       field: 'name',
       headerName: 'Name',
@@ -172,7 +178,11 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
         <Box sx={{ width: '100%' }}>
           <Paper sx={{ width: '100%', mb: 2 }}>
             <SellerToolbar noOfRows={rows.length} setOpen={setOpen} />
-            <EnhancedDataGrid rows={rows} columns={columns} />
+            <EnhancedDataGrid
+              rows={rows}
+              columns={columns}
+              onDoubleClick={(id) => router.push(`/seller/${id}`)}
+            />
           </Paper>
         </Box>
         <EnhancedForm
@@ -192,9 +202,9 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
 export const getServerSideProps = async () => {
   let sellers: SellerData[] = [];
   try {
-    const response = await serverClient.get<SellerData[]>('/seller');
-    sellers = response.data;
+    sellers = await getSellers();
   } catch (error) {
+    console.error(error);
   } finally {
     return {
       props: {

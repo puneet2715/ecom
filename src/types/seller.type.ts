@@ -1,3 +1,5 @@
+import { ListingData } from './listing.type';
+
 /**
  * Seller data type
  */
@@ -10,4 +12,5 @@ export type SellerData = {
   gender: string;
   image: string;
   totalListings: number;
+  listings?: ListingData[];
 };

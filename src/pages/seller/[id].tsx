@@ -1,14 +1,20 @@
 import styles from '@/styles/Home.module.css';
 import dynamic from 'next/dynamic';
-import { GridColDef } from '@mui/x-data-grid';
+import type { GetServerSideProps } from 'next';
+import type { GridColDef } from '@mui/x-data-grid';
 import { MouseEvent, useState } from 'react';
 import { ListingData } from '@/types/listing.type';
-import { client, serverClient } from '@/utils/axios';
-import EnhancedDataGrid from '@/components/common/EnhancedDataGrid';
+import { client } from '@/utils/axios';
+import { SellerData } from '@/types/seller.type';
+import { getSellerById } from '@/services/seller.service';
 import ListingToolbar from '@/components/listing/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineOutlined';
+
+const EnhancedDataGrid = dynamic(
+  () => import('@/components/common/EnhancedDataGrid'),
+);
 const EnhancedForm = dynamic(() => import('@/components/common/Form'));
 const Box = dynamic(() => import('@mui/material/Box'));
 const Paper = dynamic(() => import('@mui/material/Paper'));
@@ -62,8 +68,8 @@ const fields = [
   },
 ] as const;
 
-export default function Seller({ listings }: { listings: ListingData[] }) {
-  const [rows, setRows] = useState(listings);
+export default function Seller({ seller }: { seller: SellerData }) {
+  const [rows, setRows] = useState(seller.listings!);
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<
     Record<string, string | number> | undefined
@@ -96,8 +102,10 @@ export default function Seller({ listings }: { listings: ListingData[] }) {
   };
 
   const handleCreate = async (data: Record<string, string | number>) => {
-    console.log('data', data);
-    const listing = await client.post<ListingData>('/listing', data);
+    const listing = await client.post<ListingData>('/listing', {
+      ...data,
+      sellerId: seller.id,
+    });
 
     setRows([...rows, { ...listing.data }]);
   };
@@ -194,17 +202,25 @@ export default function Seller({ listings }: { listings: ListingData[] }) {
   );
 }
 
-export const getServerSideProps = async () => {
-  let listings: ListingData[] = [];
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const sellerId = ctx.params?.id;
+
+  if (!sellerId || Array.isArray(sellerId)) {
+    return {
+      notFound: true,
+    };
+  }
+
   try {
-    const response = await serverClient.get<ListingData[]>('/listing');
-    listings = response.data;
-  } catch (error) {
-  } finally {
+    const seller = await getSellerById(sellerId);
     return {
       props: {
-        listings,
+        seller,
       },
+    };
+  } catch (error) {
+    return {
+      notFound: true,
     };
   }
 };

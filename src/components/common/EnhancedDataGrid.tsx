@@ -3,7 +3,6 @@ import { SellerData } from '@/types/seller.type';
 import {
   DataGrid,
   GridColDef,
-  GridSelectionModel,
   GridToolbarColumnsButton,
   GridToolbarContainer,
   GridToolbarFilterButton,
@@ -24,14 +23,12 @@ function CustomToolbar() {
 export default function EnhancedDataGrid({
   rows,
   columns,
+  onDoubleClick,
 }: {
   rows: SellerData[] | ListingData[];
   columns: GridColDef[];
+  onDoubleClick?: (id: string) => void;
 }) {
-  // const [selectionModel, setSelectionModel] = React.useState<
-  //   GridSelectionModel | undefined
-  // >(undefined);
-
   const [pageSize, setPageSize] = React.useState(5);
 
   return (
@@ -45,10 +42,9 @@ export default function EnhancedDataGrid({
         setPageSize(newPageSize);
       }}
       checkboxSelection
-      // selectionModel={selectionModel}
-      // onSelectionModelChange={(newSelectionModel) => {
-      //   setSelectionModel(newSelectionModel);
-      // }}
+      onRowDoubleClick={(params) =>
+        onDoubleClick && onDoubleClick(params.id.toString())
+      }
       components={{
         Toolbar: CustomToolbar,
       }}
