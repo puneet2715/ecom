@@ -10,13 +10,14 @@ export default async function handler(
   switch (req.method) {
     case 'GET':
       const sellers = await getSellers();
-      res.status(200).send(sellers);
+      res.status(200).json(sellers);
       break;
     case 'POST':
       const newSeller = await Seller.create(req.body);
-      res.status(201).send(newSeller);
+      res.status(201).json(newSeller);
+      break;
     default:
-      res.status(405).send({ message: 'Request not allowed' });
+      res.status(405).json({ message: 'Request not allowed' });
       break;
   }
 }

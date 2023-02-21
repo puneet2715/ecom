@@ -12,14 +12,14 @@ export default async function handler(
   switch (req.method) {
     case 'GET':
       const listing: ListingData[] = await Listing.find({});
-      res.status(200).json(listing);
+      res.status(200).send(listing);
       break;
     case 'POST':
       const newListing = await Listing.create({
         ...req.body,
         sellerId: new Types.ObjectId(req.body.sellerId),
       });
-      res.status(200).json(newListing);
+      res.status(200).send(newListing);
       break;
     case 'PUT':
       const updatedListing = await Listing.findByIdAndUpdate(
@@ -30,7 +30,7 @@ export default async function handler(
           overwrite: true,
         },
       );
-      res.status(200).json(updatedListing);
+      res.status(200).send(updatedListing);
       break;
     case 'PATCH':
       const modifiedListing = await Listing.findByIdAndUpdate(
@@ -40,14 +40,14 @@ export default async function handler(
           new: true,
         },
       );
-      res.status(200).json(modifiedListing);
+      res.status(200).send(modifiedListing);
       break;
     case 'DELETE':
       await Listing.findByIdAndDelete(req.body.id);
-      res.status(200).json({ message: 'Listing deleted' });
+      res.status(200).send({ message: 'Listing deleted' });
       break;
     default:
-      res.status(400).json({ message: 'Invalid request' });
+      res.status(400).send({ message: 'Invalid request' });
       break;
   }
 }

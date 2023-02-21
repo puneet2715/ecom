@@ -76,7 +76,8 @@ export default function Seller({ seller }: { seller: SellerData }) {
   >(undefined);
 
   const handleDelete = async (id: string) => {
-    await client.delete(`/seller`, { data: { id } });
+    await client.delete(`/listing`, { data: { id } });
+    // await client.delete(`/seller/${id}`);
     const newRows = rows.filter((row) => row.id !== id);
     setRows([...newRows]);
   };
@@ -85,7 +86,7 @@ export default function Seller({ seller }: { seller: SellerData }) {
     id: string,
     data: Record<string, string | number>,
   ) => {
-    const response = await client.put<ListingData>('/listing', {
+    const response = await client.patch<ListingData>('/listing', {
       id,
       ...data,
     });
@@ -213,6 +214,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   try {
     const seller = await getSellerById(sellerId);
+    // console.log('seller', seller);
     return {
       props: {
         seller,

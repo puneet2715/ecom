@@ -79,7 +79,7 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
   >(undefined);
 
   const handleDelete = async (id: string) => {
-    await client.delete(`/seller`, {
+    await client.delete(`/seller/${id}`, {
       data: { id },
     });
     const newRows = rows.filter((row) => row.id !== id);
@@ -136,7 +136,7 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
   };
 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 1 },
+    { field: 'id', headerName: 'ID', flex: 1, hide: true },
     {
       field: 'name',
       headerName: 'Name',
@@ -203,6 +203,12 @@ export const getServerSideProps = async () => {
   let sellers: SellerData[] = [];
   try {
     sellers = await getSellers();
+    // console.log(sellers);
+    // remove _id from sellers
+    // sellers = sellers.map((seller) => {
+    //   const { _id, ...rest } = seller;
+    //   return { id: _id, ...rest };
+    // });
   } catch (error) {
     console.error(error);
   } finally {

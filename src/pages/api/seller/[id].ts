@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Seller from '@/models/Seller';
 import connectMongo from '@/utils/mongo';
-import { SellerData } from '@/types/seller.type';
-import { Types } from 'mongoose';
 import { getSellerById } from '@/services/seller.service';
 
 export default async function handler(

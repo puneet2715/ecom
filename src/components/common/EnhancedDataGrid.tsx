@@ -29,7 +29,7 @@ export default function EnhancedDataGrid({
   columns: GridColDef[];
   onDoubleClick?: (id: string) => void;
 }) {
-  const [pageSize, setPageSize] = React.useState(5);
+  const [pageSize, setPageSize] = React.useState(10);
 
   return (
     <DataGrid

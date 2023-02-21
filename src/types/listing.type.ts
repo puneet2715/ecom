@@ -1,4 +1,6 @@
 export type ListingData = {
+  _id?: string;
+  sellerId?: string;
   id: string;
   productName: string;
   sku: string;
