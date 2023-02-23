@@ -11,6 +11,12 @@ import SellerToolbar from '@/components/seller/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 
 const EnhancedDataGrid = dynamic(
   () => import('@/components/common/EnhancedDataGrid'),
@@ -78,10 +84,14 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
     Record<string, string | number> | undefined
   >(undefined);
 
-  const handleDelete = async (id: string) => {
+  const [toDelete, setToDelete] = useState('');
+
+  const handleDelete = async () => {
+    const id = toDelete;
     await client.delete(`/seller/${id}`, {
       data: { id },
     });
+    setToDelete('');
     const newRows = rows.filter((row) => row.id !== id);
     setRows([...newRows]);
   };
@@ -127,7 +137,8 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
 
   const handleActionClick = (id: string, type: string) => {
     if (type === 'delete') {
-      handleDelete(id);
+      // handleDelete(id);
+      setToDelete(id);
     } else {
       const data = rows.find((row) => row.id === id);
       setEditData(data as Record<string, string | number> | undefined);
@@ -194,6 +205,18 @@ export default function Home({ sellers }: { sellers: SellerData[] }) {
           editData={editData}
           onSubmit={handleSubmit}
         />
+        <Dialog open={!!toDelete}>
+          <DialogTitle>Delete Seller</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete this seller?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setToDelete('')}>Cancel</Button>
+            <Button onClick={handleDelete}>Delete</Button>
+          </DialogActions>
+        </Dialog>
       </main>
     </>
   );
@@ -203,12 +226,6 @@ export const getServerSideProps = async () => {
   let sellers: SellerData[] = [];
   try {
     sellers = await getSellers();
-    // console.log(sellers);
-    // remove _id from sellers
-    // sellers = sellers.map((seller) => {
-    //   const { _id, ...rest } = seller;
-    //   return { id: _id, ...rest };
-    // });
   } catch (error) {
     console.error(error);
   } finally {
