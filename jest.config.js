@@ -12,6 +12,9 @@ module.exports = {
       },
     ],
   },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
   testMatch: ['**/**/?(*.)+(spec|test).[tj]s?(x)'],
   setupFilesAfterEnv: ['./src/jest.setup.ts'],
 };

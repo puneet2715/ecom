@@ -6,7 +6,12 @@
             "node",
             "jest",
             "@testing-library/jest-dom"
-        ]
+        ],
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        }
     },
     "include": [
         "__test__/**/*.spec.*"
