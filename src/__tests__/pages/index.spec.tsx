@@ -33,6 +33,6 @@ describe('Home Page', () => {
       },
     ];
     render(<Home sellers={sellers}></Home>);
-    expect(screen.getByText(/Sellers/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sellers(2)/i)).toBeInTheDocument();
   });
 });
