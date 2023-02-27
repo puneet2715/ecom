@@ -1,6 +1,6 @@
 import Head from 'next/head';
-import styles from '../styles/Home.module.css';
-// import styles from '@/styles/Home.module.css';
+// import styles from '../styles/Home.module.css';
+import styles from '@/styles/Home.module.css';
 import dynamic from 'next/dynamic';
 import type { GridColDef } from '@mui/x-data-grid';
 import { useState, MouseEvent } from 'react';
