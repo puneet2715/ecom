@@ -22,7 +22,7 @@ export default function SellerToolbar({
     >
       <Stack direction="row" justifyContent="space-between" width="100%">
         <Box>
-          <Typography>Sellers({noOfRows})</Typography>
+          <Typography aria-label="Sellers">Sellers({noOfRows})</Typography>
         </Box>
         <Box>
           <Button variant="contained" onClick={() => setOpen(true)}>

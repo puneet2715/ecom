@@ -15,6 +15,5 @@
     },
     "include": [
         "__test__/**/*.spec.*",
-        "declaration.d.ts"
     ]
 }
